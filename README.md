@@ -1,139 +1,116 @@
-# Python Flask Docker
+# SERVER HTML DOCKER
 
-## Esta é uma rota rápida para colocar uma aplicação Python Flask rodando dentro de um container Docker.
+## Para criar um servidor HTML usando Docker, o método mais rápido e comum é utilizar o Nginx, um servidor web leve e eficiente. Siga este tutorial passo a passo:
 
-# 1. Estrutura do Projeto
-Crie uma pasta para o projeto com os seguintes arquivos:
+# 1. Prepare seus arquivos
+
+Crie uma pasta para o projeto e, dentro dela, salve o seu arquivo HTML principal como index.html.
 
 ```bash
-text
-meu-app-flask/
-├── app.py
-├── requirements.txt
-└── Dockerfile
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Meu Site no Docker!</h1>
+</body>
+</html>
 ```
 --------
 
-# 2. Crie o Código da Aplicação (app.py) 
-Um servidor básico que responde "Hello, Docker!".
+# 2. Crie o Dockerfile 
+No mesmo diretório, crie um arquivo chamado Dockerfile (sem extensão) com o seguinte conteúdo:
 
 ```bash
-from flask import Flask
+# Usa a imagem oficial do Nginx
+FROM nginx:alpine
 
-app = Flask(__name__)
+# Copia os arquivos HTML locais para a pasta padrão do Nginx no container
+COPY . /usr/share/nginx/html
 
-@app.route('/')
-def home():
-    return "Olá! Este Flask está rodando no Docker."
-
-if __name__ == '__main__':
-    # host='0.0.0.0' é essencial para que o container seja acessível externamente
-    # app.run(host='0.0.0.0', port=5000)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+# Expõe a porta 80
+EXPOSE 80
 ```
 --------
 
-# 3. Liste as Dependências (requirements.txt) 
-Informe ao Docker o que instalar.
+# 3. Construa a Imagem
+Abra o terminal na pasta do projeto e execute o comando abaixo para gerar a imagem:
 
 ```bash
-flask==3.0.1
+docker build -t meu-servidor-html .
 ```
 --------
 
-# 4. Escreva o Dockerfile 
-Este arquivo contém as instruções de montagem da imagem.
+# 4. Execute o Container
+Agora, inicie o servidor mapeando uma porta do seu computador (ex: 8080) para a porta 80 do container:
 
 ```bash
-# Usa uma imagem oficial leve do Python
-FROM python:3.9-slim
-
-# Define o diretório de trabalho dentro do container
-WORKDIR /app
-
-# Copia os arquivos locais para o container
-COPY . /app
-
-# Instala as dependências
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Expõe a porta que o Flask usará
-EXPOSE 5000
-
-# Comando para rodar a aplicação
-CMD ["python", "app.py"]
+docker run -d -p 8080:80 --name meu-site meu-servidor-html
 ```
 --------
 
-# 5. Construa e Rode o Container 
-Abra o terminal na pasta do projeto e execute os comandos:
-### 1. Build da Imagem: Crie a imagem chamada flask-app.
+- -d: Roda em segundo plano (detached mode).
+- -p 8080:80: Mapeia a porta 8080 do seu host para a 80 do container.
+
+# 5. Acesse seu site 
 
 ```bash
-docker build -t flask-app .
+Abra o navegador e acesse http://localhost:8080
 ```
 --------
 
-### 2. Rodar o Container: Mapeia a porta 5000 do seu PC para a 5000 do container.
+## Dica Pro (Sem Dockerfile): Se você quiser apenas testar o HTML rapidamente sem criar uma imagem customizada, pode usar um bind mount diretamente no terminal:
 
 ```bash
-docker run -p 5000:5000 flask-app
+docker run -d -p 8080:80 -v $(pwd):/usr/share/nginx/html nginx:alpine
 ```
 --------
 
-### Para atualizar sua aplicação após editar o código, você tem duas opções principais: a manual (reconstruir a imagem) ou a automática (usar volumes para desenvolvimento).
+# 6. Para atualizar o seu site após editar o arquivo index.html, o método depende de como você iniciou o container:
 
---------
+- Opção 1: Se você usou um Dockerfile (Rebuild)
+Se você seguiu o passo a passo de criar uma imagem customizada, precisará reconstruir a imagem para incluir a nova versão do arquivo:
 
-# 1. Método Manual (Reconstruir)
-
-Sempre que alterar o app.py, você precisa criar uma nova versão da imagem para incluir o novo código. 
-#### 1. Pare o container atual: CTRL+C no terminal ou docker stop <nome>.
-#### 2. Reconstrua a imagem:
+- Pare e remova o container antigo:
 
 ```bash
-docker build -t flask-app .
+docker stop meu-site
+docker rm meu-site
 ```
 --------
 
-#### 3. Rode o container novamente:
+
+# 7. Gere a imagem novamente:
 
 ```bash
-docker run -p 5000:5000 flask-app
+docker build -t meu-servidor-html .
 ```
 --------
 
-# 2. Método Automático (Hot Reload)
-Para não precisar reconstruir a imagem a cada ponto e vírgula, você pode montar sua pasta local dentro do container usando um volume. Isso reflete as mudanças instantaneamente.
-
-## Passo A: Ative o modo Debug no app.py
-#### O Flask só reinicia sozinho se o debug=True estiver ativo.
+# 8. Inicie o novo container:
 
 ```bash
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+docker run -d -p 8080:80 --name meu-site meu-servidor-html
 ```
 --------
 
-## Passo B: Rode com Volume
-#### Use a flag -v para conectar sua pasta atual (pwd) ao diretório /app do container.
+- Opção 2: Se você usou o comando rápido (Bind Mount)
+Se você utilizou o comando com -v $(pwd):/usr/share/nginx/html, a atualização é automática. 
+
+- Basta salvar o arquivo index.html no seu computador e atualizar a página (F5) no navegador.
+
+- O Nginx lerá o arquivo alterado instantaneamente no container. 
+- Stack Overflow Stack Overflow +2
+- Opção 3: Atualizar sem reiniciar (Docker CP)
+Se o container já está rodando e você não quer reiniciá-lo, pode "copiar" o arquivo editado diretamente para dentro dele:
 
 ```bash
-# No Linux/Mac:
-docker run -p 5000:5000 -v $(pwd):/app flask-app
-
-# No Windows (PowerShell):
-docker run -p 5000:5000 -v ${PWD}:/app flask-app
+docker cp index.html meu-site:/usr/share/nginx/html/index.html
 ```
 --------
 
-## Agora, ao salvar o app.py, o Flask detectará a mudança e reiniciará o servidor dentro do container automaticamente. 
-# Resumo de Comandos Úteis
 
-- Docker Docs: Bind Mounts: Guia oficial sobre como sincronizar arquivos locais com containers.
 
-- Flask: Debug Mode: Documentação sobre o comportamento do reloader automático. 
-
-## Você prefere continuar usando comandos individuais do Docker ou quer aprender a configurar um arquivo docker-compose.yml para facilitar esse processo?
+## Recomendação para Desenvolvimento:
+Para evitar ter que reconstruir a imagem a cada pequena alteração de texto ou cor, utilize sempre o Bind Mount (Opção 2) enquanto estiver criando o site. Deixe o Dockerfile apenas para quando o site estiver pronto para ser publicado ou enviado para outra pessoa.
 
 
