@@ -1,4 +1,4 @@
-<img src="https://www.svgrepo.com/show/374284/docker-opened.svg" min-width="150px" max-width="150px" width="150px" align="right" alt="">
+<img src="https://www.svgrepo.com/show/354926/docker.svg" min-width="150px" max-width="150px" width="150px" align="right" alt="">
 
 # IS DOCKER - APLICAÇÃO RODANDO DENTRO DE UM CONTAINER
 
