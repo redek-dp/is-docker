@@ -1,4 +1,4 @@
-<img src="https://i.ibb.co/gZS7h2D/DS.png" min-width="150px" max-width="150px" width="150px" align="right" alt="">
+<img src="https://www.svgrepo.com/show/354926/docker.svg" min-width="150px" max-width="150px" width="150px" align="right" alt="">
 
 # PYTHON FLASK DOCKER | RODANDO DENTRO DE UM CONTAINER.
 
